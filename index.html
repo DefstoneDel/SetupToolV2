@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Setup Adjuster</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use Inter font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#DC2626', // Red accent
+                        'secondary': '#1F2937', // Dark gray background
+                        'card-bg': '#374151', // Lighter gray for cards
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #DC2626;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1F2937;
+        }
+        /* Ensure input focus looks clean */
+        input:focus {
+            --tw-ring-color: #DC2626;
+        }
+        /* Styling for the range slider track/thumb (Temperature) */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            border: 1px solid #DC2626;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #DC2626;
+            cursor: pointer;
+            box-shadow: 0 0 2px 0 #DC2626;
+        }
+        input[type=range]::-moz-range-thumb {
+            border: 1px solid #DC2626;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #DC2626;
+            cursor: pointer;
+            box-shadow: 0 0 2px 0 #DC2626;
+        }
+        /* Styling for the base setup sliders (parts) */
+        .base-range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #4B5563; /* Gray thumb for parts */
+            cursor: pointer;
+        }
+        .base-range-input::-moz-range-thumb {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: #4B5563; /* Gray thumb for parts */
+            cursor: pointer;
+        }
+        /* Hide number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Grid classes for responsiveness: 2 columns on mobile, 6 on desktop */
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr)); /* Default to 2 columns on mobile */
+            gap: 1rem; /* gap-4 */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .setup-grid {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 1.5rem; /* gap-6 */
+            }
+        }
+    </style>
+</head>
+<body class="bg-secondary text-gray-100 min-h-screen p-4 sm:p-8 font-sans">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-primary mb-2">Setup Tool</h1>
+            <p class="text-gray-400 text-lg"></p>
+        </header>
+
+        <!-- Main Configuration Panel -->
+        <div class="bg-card-bg p-6 sm:p-8 rounded-xl shadow-2xl space-y-8">
+
+            <!-- Environment Adjustments -->
+            <section>
+                <h2 class="text-2xl font-semibold mb-4 border-b border-gray-600 pb-2 text-white">1. Environmental Adjustments</h2>
+                
+                <!-- Temperature Input -->
+                <div class="mb-6 p-4 bg-gray-700 rounded-lg">
+                    <label for="temp-input" class="block text-sm font-medium text-gray-300 mb-2">
+                        Temperature Change: <span id="temp-display" class="font-bold text-primary">0</span> °C
+                    </label>
+                    <input type="range" id="temp-input" min="-20" max="20" value="0"
+                            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer range-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
+                    <div class="flex justify-between text-xs text-gray-400 mt-2">
+                        <span>-1 °C</span>
+                        <span>Baseline</span>
+                        <span>+1 °C</span>
+                    </div>
+                </div>
+
+                <!-- Temperature Adjustment Results -->
+                <div class="p-4 rounded-xl bg-gray-800 shadow-inner mb-6">
+                    <h3 class="text-lg font-bold text-white mb-3">Temperature Adjustment per Component</h3>
+                    <div class="p-3 rounded-lg bg-gray-700 flex flex-wrap md:flex-nowrap">
+                        <span class="text-sm font-medium text-gray-400 w-full md:w-1/6 self-center mb-2 md:mb-0">Temp Adj. (<span id="temp-adj-val-2">0</span> °C)</span>
+                        <div id="temp-adj-row" class="setup-grid w-full md:w-5/6">
+                            <!-- Temp Adj results generated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Surface Condition Toggle (3 States) -->
+                <!-- MODIFIED: Changed to flex-col on mobile for better touch targets and readability -->
+                <div class="p-4 bg-gray-700 rounded-lg mb-6">
+                    <span class="block text-sm font-medium text-gray-300 mb-3">Track Surface Change</span>
+                    <div class="flex flex-col md:flex-row rounded-lg shadow-sm w-full space-y-2 md:space-y-0 md:space-x-0">
+                        <!-- Added responsive rounding classes to ensure buttons look good whether stacked or horizontal -->
+                        <button id="surface-neutral" data-surface="NEUTRAL"
+                                class="flex-1 px-3 py-2 text-sm font-medium border border-primary text-white bg-primary transition duration-150 ease-in-out whitespace-nowrap rounded-lg md:rounded-l-lg md:rounded-r-none">
+                            Base Setup
+                        </button>
+                        <button id="surface-dry-to-rain" data-surface="DRY_TO_RAIN"
+                                class="flex-1 px-3 py-2 text-sm font-medium border border-gray-500 text-gray-300 hover:bg-gray-800 transition duration-150 ease-in-out whitespace-nowrap rounded-lg md:rounded-none">
+                            Dry to Rain Conversion
+                        </button>
+                        <button id="surface-rain-to-dry" data-surface="RAIN_TO_DRY"
+                                class="flex-1 px-3 py-2 text-sm font-medium border border-gray-500 text-gray-300 hover:bg-gray-800 transition duration-150 ease-in-out whitespace-nowrap rounded-lg md:rounded-r-lg md:rounded-l-none">
+                            Rain to Dry Conversion
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Surface Adjustment Results -->
+                <div class="p-4 rounded-xl bg-gray-800 shadow-inner">
+                    <h3 class="text-lg font-bold text-white mb-3">Surface Condition Adjustment per Component</h3>
+                    
+                    <!-- Individual Surface Adjustment Row -->
+                    <div class="p-3 rounded-lg bg-gray-700 flex flex-wrap md:flex-nowrap mb-4">
+                        <span class="text-sm font-medium text-gray-400 w-full md:w-1/6 self-center mb-2 md:mb-0">Surface Adj.</span>
+                        <div id="surface-adj-row" class="setup-grid w-full md:w-5/6">
+                            <!-- Surface Adj results generated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- NEW: Total Adjustment Row (Surface + Temp) -->
+                    <div class="p-3 rounded-lg bg-primary/30 border border-primary/50 flex flex-wrap md:flex-nowrap">
+                        <span class="text-sm font-bold text-white w-full md:w-1/6 self-center mb-2 md:mb-0">Total Env. Adj.</span>
+                        <div id="total-adj-row" class="setup-grid w-full md:w-5/6">
+                            <!-- Total Adjustment results generated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Base Setup Input and Final Result (Combined) -->
+            <section class="mt-8">
+                <h2 class="text-2xl font-semibold mb-4 border-b border-gray-600 pb-2 text-white">2. Base Setup & Final Recommendation</h2>
+
+                <!-- Base Setup Input Row -->
+                <div class="p-4 rounded-xl bg-gray-700/50 border border-gray-600 mb-6">
+                    <h3 class="text-base font-bold text-white mb-3 border-b border-gray-600 pb-2">Your Base Setup (0-1000)</h3>
+                    <div id="base-input-row" class="setup-grid">
+                        <!-- Inputs generated by JS, now including small part headers -->
+                    </div>
+                </div>
+
+                <!-- New Recommended Setup Row (Final Result) -->
+                <div class="p-4 rounded-xl bg-gray-800 shadow-inner">
+                    <h3 class="text-xl font-bold text-white mb-4">New Recommended Setup</h3>
+                    <div class="p-3 rounded-lg bg-primary/20 border-2 border-primary flex flex-wrap md:flex-nowrap">
+                        <span class="text-lg font-bold text-white w-full md:w-1/6 self-center mb-2 md:mb-0">Final Setup</span>
+                        <div id="new-setup-row" class="setup-grid w-full md:w-5/6">
+                            <!-- Final results generated by JS, now including small part headers -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS ---
+        const COEFFS = {
+            'Front wing': 4.17,
+            'Rear wing': 4.17,
+            'Engine': -5.00,
+            'Brakes': 5.83,
+            'Gear': -5.00,
+            'Suspension': -5.50
+        };
+
+        const DRY_TO_RAIN_ADJUSTMENTS = {
+            'Front wing': 115.0,
+            'Rear wing': 115.0,
+            'Engine': -105.0,
+            'Brakes': 85.0,
+            'Gear': -100.0,
+            'Suspension': -120.0
+        };
+
+        const RAIN_TO_DRY_ADJUSTMENTS = {
+            'Front wing': -115.0,
+            'Rear wing': -115.0,
+            'Engine': 105.0,
+            'Brakes': -85.0,
+            'Gear': 100.0,
+            'Suspension': 120.0
+        };
+
+        // --- STATE ---
+        let currentSurface = 'NEUTRAL';
+        const setupParts = Object.keys(COEFFS);
+        const tempInput = document.getElementById('temp-input');
+        const tempDisplay = document.getElementById('temp-display');
+
+        // --- UTILITY FUNCTIONS ---
+
+        /**
+         * Formats a number to two decimal places, showing the sign (+/-).
+         * @param {number} value
+         * @returns {string}
+         */
+        const formatAdjustment = (value) => {
+            const rounded = Math.round(value * 100) / 100;
+            return rounded > 0 ? `+${rounded.toFixed(2)}` : rounded.toFixed(2);
+        };
+        
+        // Clamps value between 0 and 1000
+        const clampValue = (value) => {
+            return Math.max(0, Math.min(1000, value));
+        };
+
+        // --- CORE LOGIC ---
+
+        /**
+         * Synchronizes the range and text input for a specific part and triggers the main calculation.
+         * @param {Event} event - The input or change event.
+         */
+        function handleBaseInputChange(event) {
+            const source = event.target;
+            const part = source.getAttribute('data-part');
+            const safePartId = part.replace(/\s/g, '-').toLowerCase();
+
+            // 1. Sanitize and clamp the value (0-1000)
+            let value = parseFloat(source.value);
+            value = isNaN(value) ? 0 : clampValue(value);
+
+            // Get the corresponding inputs
+            const textInput = document.getElementById(`base-text-input-${safePartId}`);
+            const rangeInput = document.getElementById(`base-range-input-${safePartId}`);
+
+            // 2. Synchronize the counterpart input
+            if (source.classList.contains('base-text-input')) {
+                // Text input changed, update range and correct text input if it was clamped
+                rangeInput.value = value;
+                if (parseFloat(textInput.value) !== value) {
+                    textInput.value = value.toFixed(0); 
+                }
+            } else if (source.classList.contains('base-range-input')) {
+                // Range input changed, update text
+                textInput.value = value.toFixed(0);
+            }
+            
+            // 3. Trigger full calculation
+            updateCalculations();
+        }
+
+        /**
+         * Renders the initial horizontal setup components.
+         */
+        function renderInitialSetup() {
+            // NOTE: part-headers div is removed as per user request to embed headers in each row.
+            const baseInputRow = document.getElementById('base-input-row');
+            const tempAdjRow = document.getElementById('temp-adj-row');
+            const surfaceAdjRow = document.getElementById('surface-adj-row');
+            const totalAdjRow = document.getElementById('total-adj-row'); // NEW ELEMENT
+            const newSetupRow = document.getElementById('new-setup-row');
+
+            // Clear previous content
+            baseInputRow.innerHTML = '';
+            tempAdjRow.innerHTML = '';
+            surfaceAdjRow.innerHTML = '';
+            totalAdjRow.innerHTML = ''; // Clear new row
+            newSetupRow.innerHTML = '';
+
+            setupParts.forEach(part => {
+                const safePartId = part.replace(/\s/g, '-').toLowerCase();
+
+                // 2. Base Setup Input Container
+                baseInputRow.innerHTML += `
+                    <div class="flex flex-col items-center space-y-1">
+                        <!-- Header for Input -->
+                        <span class="text-xs font-medium text-gray-400 uppercase truncate" title="${part}">${part}</span>
+                        <!-- Text Input -->
+                        <input type="number" data-part="${part}" value="0" min="0" max="1000" step="1"
+                            id="base-text-input-${safePartId}"
+                            class="base-text-input w-full p-1 text-base bg-gray-600 text-white rounded-md border border-gray-500 text-center font-mono focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                            placeholder="0-1000">
+                        <!-- Range Input -->
+                        <input type="range" data-part="${part}" value="0" min="0" max="1000" step="1"
+                            id="base-range-input-${safePartId}"
+                            class="base-range-input w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer range-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
+                    </div>
+                `;
+
+                // 3. Temperature Adjustment Result
+                tempAdjRow.innerHTML += `
+                    <div class="flex flex-col items-center p-1 space-y-0.5">
+                        <span class="text-xs font-medium text-gray-400 uppercase truncate" title="${part}">${part}</span>
+                        <span id="temp-adj-${safePartId}" class="text-sm font-mono text-yellow-300">0.00</span>
+                    </div>
+                `;
+
+                // 4. Surface Adjustment Result
+                surfaceAdjRow.innerHTML += `
+                    <div class="flex flex-col items-center p-1 space-y-0.5">
+                        <span class="text-xs font-medium text-gray-400 uppercase truncate" title="${part}">${part}</span>
+                        <span id="surface-adj-${safePartId}" class="text-sm font-mono text-blue-400">0.00</span>
+                    </div>
+                `;
+                
+                // 4.5. NEW: Total Adjustment Result (Temp + Surface)
+                totalAdjRow.innerHTML += `
+                    <div class="flex flex-col items-center p-1 space-y-0.5">
+                        <span class="text-xs font-medium text-gray-400 uppercase truncate" title="${part}">${part}</span>
+                        <span id="total-adj-${safePartId}" class="text-sm font-mono text-yellow-500 font-bold">0.00</span>
+                    </div>
+                `;
+                
+                // 5. New Recommended Setup Result (Final Result)
+                newSetupRow.innerHTML += `
+                    <div class="flex flex-col items-center p-1 space-y-0.5">
+                        <span class="text-xs font-medium text-gray-400 uppercase truncate" title="${part}">${part}</span>
+                        <span id="new-setup-${safePartId}" class="text-md font-bold text-green-400">0.00</span>
+                    </div>
+                `;
+            });
+
+            // Attach listeners to both types of inputs in the newly created structure
+            document.querySelectorAll('.base-text-input, .base-range-input').forEach(input => {
+                input.addEventListener('input', handleBaseInputChange);
+                input.addEventListener('change', handleBaseInputChange); // 'change' handles blur/completion on text input
+            });
+        }
+
+        /**
+         * Calculates and updates all setup values based on current inputs.
+         */
+        function updateCalculations() {
+            const deltaT = parseFloat(tempInput.value);
+            const tempAdjValDisplay = formatAdjustment(deltaT);
+            
+            // Update temperature displays
+            document.getElementById('temp-adj-val-2').textContent = tempAdjValDisplay;
+            tempDisplay.textContent = tempAdjValDisplay;
+
+            // Determine the correct set of surface adjustments
+            let surfaceAdjustments = {};
+            if (currentSurface === 'DRY_TO_RAIN') {
+                surfaceAdjustments = DRY_TO_RAIN_ADJUSTMENTS;
+            } else if (currentSurface === 'RAIN_TO_DRY') {
+                surfaceAdjustments = RAIN_TO_DRY_ADJUSTMENTS;
+            } else { // 'NEUTRAL' state: No surface adjustment
+                setupParts.forEach(part => { surfaceAdjustments[part] = 0; });
+            }
+
+            setupParts.forEach(part => {
+                const safePartId = part.replace(/\s/g, '-').toLowerCase();
+                
+                // 1. Get Base Value (from the synchronized text input)
+                const baseTextInput = document.getElementById(`base-text-input-${safePartId}`);
+                const baseValue = parseFloat(baseTextInput.value) || 0;
+                
+                // 2. Calculate Temperature Adjustment
+                const tempCoefficient = COEFFS[part];
+                const tempAdjustment = tempCoefficient * deltaT;
+
+                // 3. Get Surface Adjustment
+                const surfaceAdjustment = surfaceAdjustments[part] || 0;
+                
+                // Combined Adjustment (Temp + Surface) - This is the value the user requested to see
+                const totalAdjustment = tempAdjustment + surfaceAdjustment;
+
+                // 4. Calculate New Setup Value
+                const newSetupValue = baseValue + totalAdjustment;
+
+                // 5. Update Display Elements
+                document.getElementById(`temp-adj-${safePartId}`).textContent = formatAdjustment(tempAdjustment);
+                document.getElementById(`surface-adj-${safePartId}`).textContent = formatAdjustment(surfaceAdjustment);
+                document.getElementById(`total-adj-${safePartId}`).textContent = formatAdjustment(totalAdjustment); // NEW UPDATE
+                
+                // Clamp final result to 0-1000 range for display
+                const finalDisplayValue = clampValue(newSetupValue);
+                const resultElement = document.getElementById(`new-setup-${safePartId}`);
+
+                resultElement.textContent = finalDisplayValue.toFixed(2);
+                
+                // Apply visual cue for big adjustments
+                if (Math.abs(totalAdjustment) > 20) {
+                    resultElement.classList.add('animate-pulse');
+                } else {
+                    resultElement.classList.remove('animate-pulse');
+                }
+            });
+        }
+
+        /**
+         * Handles the click event for the surface buttons.
+         * @param {string} surface - 'NEUTRAL', 'DRY_TO_RAIN', or 'RAIN_TO_DRY'
+         */
+        function setSurface(surface) {
+            currentSurface = surface;
+            
+            const buttons = [
+                document.getElementById('surface-neutral'),
+                document.getElementById('surface-dry-to-rain'),
+                document.getElementById('surface-rain-to-dry')
+            ];
+
+            buttons.forEach(btn => {
+                const isActive = btn.getAttribute('data-surface') === surface;
+                
+                // Reset styles
+                btn.classList.remove('bg-primary', 'border-primary', 'text-white');
+                btn.classList.add('bg-gray-700', 'border-gray-500', 'text-gray-300', 'hover:bg-gray-800');
+
+                if (isActive) {
+                    // Apply active styles
+                    // Note: The responsive rounding classes remain on the button element itself.
+                    btn.classList.add('bg-primary', 'border-primary', 'text-white');
+                    btn.classList.remove('bg-gray-700', 'border-gray-500', 'text-gray-300', 'hover:bg-gray-800');
+                }
+            });
+
+            updateCalculations();
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderInitialSetup();
+            
+            // Set up environment event listeners
+            tempInput.addEventListener('input', updateCalculations);
+            
+            document.getElementById('surface-neutral').addEventListener('click', () => setSurface('NEUTRAL'));
+            document.getElementById('surface-dry-to-rain').addEventListener('click', () => setSurface('DRY_TO_RAIN'));
+            document.getElementById('surface-rain-to-dry').addEventListener('click', () => setSurface('RAIN_TO_DRY'));
+
+            // Initial calculation run
+            setSurface('NEUTRAL'); // Start in NEUTRAL state
+        });
+    </script>
+</body>
+</html>
