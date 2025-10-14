@@ -77,24 +77,7 @@
                 gap: 1.5rem;
             }
         }
-    
-/* Data source card styles (added) */
-.ds-card {
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:8px 12px;
-  border-radius:10px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-  border: 1px solid rgba(255,255,255,0.02);
-  transition: transform .16s ease, box-shadow .16s ease;
-}
-.ds-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(2,6,23,0.45); }
-.ds-card.active { box-shadow: 0 12px 34px rgba(2,6,23,0.55); transform: translateY(-4px); border-color: rgba(255,255,255,0.04); }
-.left-accent { width:6px; height:40px; border-radius:999px; flex:0 0 auto; margin-right:8px; }
-
-/* end added styles */
-</style>
+    </style>
 </head>
 <body class="bg-secondary text-gray-100 min-h-screen p-4 sm:p-8 font-sans">
     <div class="max-w-6xl mx-auto">
@@ -106,32 +89,11 @@
             
             <!-- DATA SOURCE SELECTOR -->
             <section class="mb-6">
-                <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Data Source</label>
-                <div id="ds-wrapper" class="flex gap-3">
-                    <button id="ds-stratita" class="ds-card" data-ds="STRATITA" aria-pressed="true">
-                        <div class="left-accent" id="accent-stratita" style="background: linear-gradient(180deg, #DC2626, rgba(255,255,255,0.02)); box-shadow: 0 6px 18px rgba(220,38,38,0.12);"></div>
-                        <div>
-                            <div class="font-semibold text-white">Stratita</div>
-                            <div class="text-xs muted-soft">Analytics dataset</div>
-                        </div>
-                    </button>
-                    <button id="ds-garage" class="ds-card" data-ds="GARAGE" aria-pressed="false">
-                        <div class="left-accent" id="accent-garage" style="background: linear-gradient(180deg, #2563EB, rgba(255,255,255,0.02)); box-shadow: 0 6px 18px rgba(37,99,235,0.12);"></div>
-                        <div>
-                            <div class="font-semibold text-white">Garage</div>
-                            <div class="text-xs muted-soft">Local garage baseline</div>
-                        </div>
-                    </button>
-                    <button id="ds-average" class="ds-card" data-ds="AVERAGE" aria-pressed="false">
-                        <div class="left-accent" id="accent-average" style="background: linear-gradient(180deg, #9CA3AF, rgba(255,255,255,0.02)); opacity:0.95;"></div>
-                        <div>
-                            <div class="font-semibold text-white">Average</div>
-                            <div class="text-xs muted-soft">Mean(Stratita, Garage)</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
+                <label for="data-source" class="block text-sm font-medium text-gray-300 mb-2">Data Source</label>
+                <select id="data-source" class="w-full sm:w-64 bg-gray-700 text-white rounded-md p-2 border border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary">
+                    <option value="STRATITA" selected>Stratita</option>
+                    <option value="GARAGE">Garage</option>
+                <option value="AVERAGE">Average</option></select>
             </section>
 
             <!-- Temperature Adjustments -->
@@ -358,55 +320,9 @@ const AVERAGE = computeAverageDataset(STRATITA, GARAGE);
             updateCalculations();
         }
 
-        
-        // dataset UI elements (cards)
-        const dsStratita = document.getElementById('ds-stratita');
-        const dsGarage = document.getElementById('ds-garage');
-        const dsAverage = document.getElementById('ds-average');
-        const accentStratita = document.getElementById('accent-stratita');
-        const accentGarage = document.getElementById('accent-garage');
-        const accentAverage = document.getElementById('accent-average');
-
-        const ACCENTS = {
-            STRATITA: { hex: '#DC2626', rgb: '220,38,38' },
-            GARAGE: { hex: '#2563EB', rgb: '37,99,235' },
-            AVERAGE: { hex: '#9CA3AF', rgb: '156,163,175' }
-        };
-
-        function setDataset(name) {
-            currentDataSet = name;
-            [dsStratita, dsGarage, dsAverage].forEach(btn => {
-                const active = btn.getAttribute('data-ds') === name;
-                btn.classList.toggle('active', active);
-                btn.setAttribute('aria-pressed', String(active));
-            });
-            // update accent for slider thumbs
-            if (name === 'STRATITA') {
-                document.documentElement.style.setProperty('--accent', ACCENTS.STRATITA.hex);
-                document.documentElement.style.setProperty('--accent-rgb', ACCENTS.STRATITA.rgb);
-            } else if (name === 'GARAGE') {
-                document.documentElement.style.setProperty('--accent', ACCENTS.GARAGE.hex);
-                document.documentElement.style.setProperty('--accent-rgb', ACCENTS.GARAGE.rgb);
-            } else {
-                document.documentElement.style.setProperty('--accent', ACCENTS.AVERAGE.hex);
-                document.documentElement.style.setProperty('--accent-rgb', ACCENTS.AVERAGE.rgb);
-            }
-            // color left accents
-            accentStratita.style.background = name === 'STRATITA' ? `linear-gradient(180deg, ${ACCENTS.STRATITA.hex}, rgba(255,255,255,0.02))` : 'linear-gradient(180deg, rgba(255,255,255,0.02), transparent)';
-            accentGarage.style.background = name === 'GARAGE' ? `linear-gradient(180deg, ${ACCENTS.GARAGE.hex}, rgba(255,255,255,0.02))` : 'linear-gradient(180deg, rgba(255,255,255,0.02), transparent)';
-            accentAverage.style.background = name === 'AVERAGE' ? `linear-gradient(180deg, ${ACCENTS.AVERAGE.hex}, rgba(255,255,255,0.02))` : 'linear-gradient(180deg, rgba(255,255,255,0.02), transparent)';
-            updateCalculations();
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             renderInitialSetup();
             tempInput.addEventListener('input', updateCalculations);
-
-            // wire dataset card clicks
-            dsStratita.addEventListener('click', ()=> setDataset('STRATITA'));
-            dsGarage.addEventListener('click', ()=> setDataset('GARAGE'));
-            dsAverage.addEventListener('click', ()=> setDataset('AVERAGE'));
-
             document.getElementById('data-source').addEventListener('change', e => {
                 currentDataSet = e.target.value;
                 updateCalculations();
