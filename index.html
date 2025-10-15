@@ -478,10 +478,10 @@ document.getElementById("simulate-btn").addEventListener("click", () => {
     const d = after[k] - before[k];
     tbody.innerHTML += `
       <tr>
-        <td class="px-4 py-2 capitalize">${k}</td>
-        <td class="px-4 py-2">${before[k]}</td>
-        <td class="px-4 py-2">${after[k]}</td>
-        <td class="px-4 py-2 ${d > 0 ? 'text-green-400' : (d < 0 ? 'text-red-400' : 'text-gray-300')}">
+        <td class="px-2 py-1 text-xs sm:text-sm capitalize">${k}</td>
+        <td class="px-2 py-1 text-xs sm:text-sm">${before[k]}</td>
+        <td class="px-2 py-1 text-xs sm:text-sm">${after[k]}</td>
+        <td class="px-2 py-1 text-xs sm:text-sm ${d > 0 ? 'text-green-400' : (d < 0 ? 'text-red-400' : 'text-gray-300')}">
           ${d > 0 ? '+' : ''}${d}
         </td>
       </tr>`;
