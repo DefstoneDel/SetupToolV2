@@ -94,22 +94,25 @@
 
         <div class="bg-card-bg p-6 sm:p-8 rounded-xl shadow-2xl space-y-8">
 
+
 <h1 class="text-4xl sm:text-5xl font-extrabold text-primary mb-2 ">Setup Tool v1.2</h1>
-            
+
+            <div class="p-4 rounded-xl bg-gray-800 shadow-inner mb-6">
             <!-- DATA SOURCE SELECTOR -->
             <section class="mb-6">
-                <label for="data-source" class="block text-sm font-medium text-gray-300 mb-2">Data Source</label>
+                <h3 class="text-lg font-bold text-white mb-3">Data Source</h3>
                 <select id="data-source" class="w-full sm:w-64 bg-gray-700 text-white rounded-md p-2 border border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary">
                     <option value="STRATITA" selected>Stratita</option>
                     <option value="GARAGE">Garage</option>
                 <option value="AVERAGE">Average</option></select>
             </section>
+</div>
 
             <!-- Temperature Adjustments -->
             <section>
                 <h2 class="text-2xl font-semibold mb-4 border-b border-gray-600 pb-2 text-white">1. Temperature Adjustments</h2>
 
-                <div class="mb-6 p-4 bg-gray-700 rounded-lg">
+                <div class="p-4 rounded-xl bg-gray-800 shadow-inner mb-6">
                     <label for="temp-input" class="block text-sm font-medium text-gray-300 mb-2">
                         Temperature Change: <span id="temp-display" class="text-2xl font-bold text-primary">0</span> °C
                     </label>
@@ -162,7 +165,7 @@
 
             <section class="mt-8">
                 <h2 class="text-2xl font-semibold mb-4 border-b border-gray-600 pb-2 text-white">2. Base Setup & Final Recommendation</h2>
-                <div class="p-4 rounded-xl bg-gray-700/50 border border-gray-600 mb-6">
+                <div class="p-4 rounded-xl bg-gray-800 shadow-inner mb-6">
                     <h3 class="text-base font-bold text-white mb-3 border-b border-gray-600 pb-2">Your Base Setup</h3>
                     <div id="base-input-row" class="setup-grid"></div>
                 </div>
