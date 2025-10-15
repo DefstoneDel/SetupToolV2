@@ -80,12 +80,21 @@
     </style>
 </head>
 <body class="bg-secondary text-gray-100 min-h-screen p-4 sm:p-8 font-sans">
-    <div class="max-w-6xl mx-auto">
-        <header class="text-center mb-4">
-            <h1 class="text-4xl sm:text-5xl font-extrabold text-primary mb-2">Setup Tool</h1>
+    <div class="max-w-6xl mx-auto text-center">
+        
+<header class="text-center mb-4">
+  <div class="flex justify-center mb-6 space-x-4">
+    <button id="tab-setup" class="px-4 py-2 font-semibold text-white bg-primary rounded-lg shadow hover:bg-primary/80">Setup Tool</button>
+    <button id="tab-training" class="px-4 py-2 font-semibold text-gray-300 bg-gray-700 rounded-lg shadow hover:bg-gray-600">Training Sim</button>
+  </div>
+</header>
+
+            
         </header>
 
         <div class="bg-card-bg p-6 sm:p-8 rounded-xl shadow-2xl space-y-8">
+
+<h1 class="text-4xl sm:text-5xl font-extrabold text-primary mb-2 ">Setup Tool V1.2</h1>
             
             <!-- DATA SOURCE SELECTOR -->
             <section class="mb-6">
@@ -335,3 +344,187 @@ const AVERAGE = computeAverageDataset(STRATITA, GARAGE);
     </script>
 </body>
 </html>
+<!-- ====================== TRAINING SIM ====================== -->
+<div id="training-sim-page" class="hidden">
+
+<header class="text-center mb-4">
+  <div class="flex justify-center mb-6 space-x-4">
+    <button id="tab-setup" class="px-4 py-2 font-semibold text-gray-300 bg-gray-700 rounded-lg shadow hover:bg-gray-600">Setup Tool</button>
+    <button id="tab-training" class="px-4 py-2 font-semibold text-white bg-primary rounded-lg shadow hover:bg-primary/80">Training Sim</button>
+  </div>
+</header>
+
+  <div class="bg-card-bg p-6 sm:p-8 rounded-xl shadow-2xl space-y-8">
+    <h2 class="text-3xl font-bold text-primary text-center">Training Sim V1.1</h2>
+    <p class="text-center text-gray-300">Adjust your driver’s stats - choose a training</p>
+
+    <!-- Input Form -->
+    <div class="bg-gray-800 p-6 rounded-lg space-y-6">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <template id="stat-template">
+          <div class="flex flex-col">
+            <label class="text-sm text-gray-300 mb-1 font-semibold stat-label"></label>
+            <input type="number" class="stat-input w-full bg-gray-700 p-2 rounded-md text-white border border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary" />
+          </div>
+        </template>
+        <div id="stat-container" class="contents"></div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+        <div>
+          <label class="text-sm text-gray-300 font-semibold">Training Type</label>
+          <select id="training-type" class="w-full bg-gray-700 text-white p-2 rounded-md border border-gray-600">
+            <option value="yoga">Yoga</option>
+            <option value="fitness">Fitness</option>
+            <option value="ninja">Ninja</option>
+            <option value="technique">Technique</option>
+            <option value="psycho">Psychologie du sport</option>
+            <option value="rp">RP</option>
+            <option value="spa">Spa resort</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm text-gray-300 font-semibold">Sessions (1–34)</label>
+          <input id="training-times" type="number" min="1" max="34" value="1" class="w-full bg-gray-700 text-white p-2 rounded-md border border-gray-600">
+        </div>
+        <button id="simulate-btn" class="bg-primary hover:bg-primary/80 text-white font-bold py-2 px-4 rounded-lg shadow-md">Simulate</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="results-container" class="hidden bg-gray-800 rounded-lg p-6 shadow-inner">
+      <h3 class="text-2xl font-semibold text-center text-white mb-4">Simulation Results</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-300 border border-gray-600 rounded-lg">
+          <thead class="bg-gray-700 text-gray-200">
+            <tr><th class="px-4 py-2">Stat</th><th class="px-4 py-2">Before</th><th class="px-4 py-2">After</th><th class="px-4 py-2">Δ</th></tr>
+          </thead>
+          <tbody id="results-body" class="divide-y divide-gray-700"></tbody>
+        </table>
+      </div>
+      <div class="text-center mt-4">
+        <span id="results-cost" class="inline-block bg-primary/20 border border-primary text-primary font-bold px-4 py-2 rounded-lg"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// === Driver Training Simulator ===
+const STAT_LIMITS={concentration:[0,250],talent:[0,250],aggressivite:[0,250],experience:[0,250],technical:[0,250],stamina:[0,250],charisme:[0,250],motivation:[0,250],poids:[0,125]};
+const TRAININGS={
+  yoga:{cost:700000,effects:()=>({concentration:r(4,6),aggressivite:-2,stamina:-2,motivation:r(5,10)})},
+  fitness:{cost:750000,effects:()=>({stamina:2,poids:-1,motivation:-3})},
+  ninja:{cost:550000,effects:()=>({aggressivite:r(5,7),concentration:1})},
+  technique:{cost:600000,effects:()=>({technical:5})},
+  psycho:{cost:400000,effects:()=>({motivation:55})},
+  rp:{cost:500000,effects:()=>({charisme:5,concentration:-3})},
+  spa:{cost:500000,effects:()=>({stamina_mult:1.4,motivation:19})}
+};
+function r(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function clamp(k,v){const [lo,hi]=STAT_LIMITS[k];return Math.min(Math.max(v,lo),hi);}
+
+// Build stat inputs dynamically
+const statContainer = document.getElementById("stat-container");
+const template = document.getElementById("stat-template").content;
+Object.keys(STAT_LIMITS).forEach(k => {
+  const el = template.cloneNode(true);
+  el.querySelector(".stat-label").textContent =
+    k.charAt(0).toUpperCase() + k.slice(1);
+  const input = el.querySelector(".stat-input");
+  input.id = "stat-" + k;
+  input.min = STAT_LIMITS[k][0];
+  input.max = STAT_LIMITS[k][1];
+  input.value = k === "poids" ? 75 : 100;
+  statContainer.appendChild(el);
+});
+
+document.getElementById("simulate-btn").addEventListener("click", () => {
+  const type = document.getElementById("training-type").value;
+  const times = parseInt(document.getElementById("training-times").value);
+  const t = TRAININGS[type];
+  if (!t || times < 1 || times > 34) {
+    alert("Invalid input");
+    return;
+  }
+
+  const stats = {};
+  Object.keys(STAT_LIMITS).forEach(
+    k => (stats[k] = parseFloat(document.getElementById("stat-" + k).value) || 0)
+  );
+
+  const before = { ...stats };
+
+  for (let i = 0; i < times; i++) {
+    const e = t.effects();
+    for (const k in e) {
+      if (k.endsWith("_mult")) {
+        const base = k.replace("_mult", "");
+        stats[base] = clamp(base, Math.round(stats[base] * e[k]));
+      } else {
+        stats[k] = clamp(k, stats[k] + e[k]);
+      }
+    }
+  }
+
+  const after = { ...stats };
+  const tbody = document.getElementById("results-body");
+  tbody.innerHTML = "";
+
+  for (const k of Object.keys(before)) {
+    const d = after[k] - before[k];
+    tbody.innerHTML += `
+      <tr>
+        <td class="px-4 py-2 capitalize">${k}</td>
+        <td class="px-4 py-2">${before[k]}</td>
+        <td class="px-4 py-2">${after[k]}</td>
+        <td class="px-4 py-2 ${d > 0 ? 'text-green-400' : (d < 0 ? 'text-red-400' : 'text-gray-300')}">
+          ${d > 0 ? '+' : ''}${d}
+        </td>
+      </tr>`;
+  }
+
+  document.getElementById("results-cost").textContent =
+    `Total Cost: $${(t.cost * times).toLocaleString()}`;
+  document.getElementById("results-container").classList.remove("hidden");
+});
+
+
+
+// === Tabs (fixed for both header sets) ===
+const allTabSetups = document.querySelectorAll("#tab-setup");
+const allTabTrainings = document.querySelectorAll("#tab-training");
+const setupContainer = document.querySelector(".bg-card-bg").parentElement;
+const trainingContainer = document.getElementById("training-sim-page");
+
+function switchTab(to) {
+  const activeSetup = to === "setup";
+  const activeTraining = to === "training";
+
+  allTabSetups.forEach(btn =>
+    btn.classList.toggle("bg-primary", activeSetup)
+  );
+  allTabSetups.forEach(btn =>
+    btn.classList.toggle("text-white", activeSetup)
+  );
+  allTabTrainings.forEach(btn =>
+    btn.classList.toggle("bg-primary", activeTraining)
+  );
+  allTabTrainings.forEach(btn =>
+    btn.classList.toggle("text-white", activeTraining)
+  );
+
+  if (activeSetup) {
+    setupContainer.classList.remove("hidden");
+    trainingContainer.classList.add("hidden");
+  } else {
+    trainingContainer.classList.remove("hidden");
+    setupContainer.classList.add("hidden");
+  }
+}
+
+// Bind listeners to *all* tab buttons
+allTabSetups.forEach(btn => btn.addEventListener("click", () => switchTab("setup")));
+allTabTrainings.forEach(btn => btn.addEventListener("click", () => switchTab("training")));
+
+</script>
