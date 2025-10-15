@@ -422,7 +422,7 @@ const TRAININGS={
   technique:{cost:600000,effects:()=>({technical:5})},
   psycho:{cost:400000,effects:()=>({motivation:55})},
   rp:{cost:500000,effects:()=>({charisme:5,concentration:-3})},
-  spa:{cost:500000,effects:()=>({stamina_mult:1.4,motivation:19})}
+  spa:{cost:500000,effects:()=>({motivation:19})}
 };
 function r(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function clamp(k,v){const [lo,hi]=STAT_LIMITS[k];return Math.min(Math.max(v,lo),hi);}
