@@ -390,12 +390,23 @@ const AVERAGE = computeAverageDataset(STRATITA, GARAGE);
           <label class="text-sm text-gray-300 font-semibold">Sessions (1–34)</label>
           <input id="training-times" type="number" min="1" max="34" value="1" class="w-full bg-gray-700 text-white p-2 rounded-md border border-gray-600">
         </div>
-        <button id="simulate-btn" class="bg-primary hover:bg-primary/80 text-white font-bold py-2 px-4 rounded-lg shadow-md">Simulate</button>
-      </div>
+<!-- OA Calculation Section -->
+<div class="col-span-1 sm:col-span-3  p-3 rounded-lg text-center mb-2">
+  <span class="text-lg font-semibold text-white">OA: </span>
+  <span id="oa-result" class="text-lg font-bold text-primary">0.00</span>
+</div>
+
+        <div class="flex justify-center sm:col-span-3">
+  <button id="simulate-btn"
+    class="bg-primary hover:bg-primary/80 text-white font-bold py-2 px-4 rounded-lg shadow-md">
+    Simulate
+  </button>
+</div>
+
     </div>
 
     <!-- Results -->
-    <div id="results-container" class="hidden bg-gray-800 rounded-lg p-1 shadow-inner">
+    <div id="results-container" class="hidden rounded-lg p-1 shadow-inner">
       <h3 class="text-2xl font-semibold text-center text-white mb-4">Simulation Results</h3>
       <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-gray-300 border border-gray-600 rounded-lg">
@@ -405,6 +416,13 @@ const AVERAGE = computeAverageDataset(STRATITA, GARAGE);
           <tbody id="results-body" class="divide-y divide-gray-700"></tbody>
         </table>
       </div>
+
+<!-- New OA Result Section -->
+<div class="text-center mt-4">
+  <span class="text-lg font-semibold text-white">New OA: </span>
+  <span id="new-oa-result" class="text-lg font-bold text-green-400">0.00</span>
+</div>
+
       <div class="text-center mt-4">
         <span id="results-cost" class="inline-block bg-primary/20 border border-primary text-primary font-bold px-4 py-2 rounded-lg"></span>
       </div>
@@ -441,6 +459,52 @@ Object.keys(STAT_LIMITS).forEach(k => {
   input.value = k === "poids" ? 75 : 100;
   statContainer.appendChild(el);
 });
+
+function calculateOA() {
+  const get = id => parseFloat(document.getElementById(id).value) || 0;
+  const CON = get("stat-concentration");
+  const TAL = get("stat-talent");
+  const AGG = get("stat-aggressivite");
+  const EXP = get("stat-experience");
+  const TECH = get("stat-technical");
+  const STA = get("stat-stamina");
+  const CHA = get("stat-charisme");
+  const MOT = get("stat-motivation");
+  const POIDS = get("stat-poids");
+
+  const OA = ((CON/48)*8) + ((TAL/48)*12) + ((AGG/48)*7) + ((EXP/48)*4) +
+             ((TECH/48)*6) + ((STA/48)*7) + ((CHA/48)*4) + ((MOT/48)*4) -
+             ((POIDS/48)*4);
+
+  document.getElementById("oa-result").textContent = OA.toFixed(2);
+}
+
+// Listen for stat input changes
+document.querySelectorAll(".stat-input").forEach(input => {
+  input.addEventListener("input", calculateOA);
+});
+
+// === Calculate New OA based on stats object ===
+function calculateNewOA(stats) {
+  const CON = stats.concentration || 0;
+  const TAL = stats.talent || 0;
+  const AGG = stats.aggressivite || 0;
+  const EXP = stats.experience || 0;
+  const TECH = stats.technical || 0;
+  const STA = stats.stamina || 0;
+  const CHA = stats.charisme || 0;
+  const MOT = stats.motivation || 0;
+  const POIDS = stats.poids || 0;
+
+  return ((CON/48)*8) + ((TAL/48)*12) + ((AGG/48)*7) + ((EXP/48)*4) +
+         ((TECH/48)*6) + ((STA/48)*7) + ((CHA/48)*4) + ((MOT/48)*4) -
+         ((POIDS/48)*4);
+}
+
+
+// Initial OA on load
+calculateOA();
+
 
 document.getElementById("simulate-btn").addEventListener("click", () => {
   const type = document.getElementById("training-type").value;
@@ -489,8 +553,15 @@ document.getElementById("simulate-btn").addEventListener("click", () => {
 
   document.getElementById("results-cost").textContent =
     `Total Cost: $${(t.cost * times).toLocaleString()}`;
+
+// Calculate and display New OA using the updated stats
+const newOA = calculateNewOA(after);
+document.getElementById("new-oa-result").textContent = newOA.toFixed(2);
+
   document.getElementById("results-container").classList.remove("hidden");
 });
+
+
 
 
 
